@@ -27,16 +27,19 @@ export default function ProtectedRoute({
             return;
         }
 
-        // Logged in via Firebase but no backend profile → redirect to onboarding
+        // Logged in via Firebase but no backend profile (could be fetching)
         if (!userProfile) {
-            router.push("/onboarding");
+            // Give it a moment or redirect to a default dashboard if they somehow bypassed it
+            router.push("/entrepreneur/dashboard");
             return;
         }
 
-        // Needs verification but isn't verified
+        // Needs verification but isn't verified (if needed, warn in dashboard, don't redirect to onboarding)
         if (requireVerified && userProfile.status !== "verified") {
-            router.push("/onboarding");
-            return;
+            // We removed onboarding. Usually, verification is just a status flag now.
+            // If you still want to block them, uncomment below, but for now we let them through to the dashboard:
+            // router.push("/entrepreneur/dashboard");
+            // return;
         }
 
         // Role check

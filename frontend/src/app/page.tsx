@@ -174,7 +174,7 @@ export default function Home() {
         entrepreneur: "/entrepreneur/dashboard",
         investor: "/investor/feed",
       };
-      return redirects[userProfile.role] || "/onboarding";
+      return redirects[userProfile.role] || "/entrepreneur/dashboard";
     }
     return "/sign-in";
   };

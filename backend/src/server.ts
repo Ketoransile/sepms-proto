@@ -17,6 +17,7 @@ const app = express();
 // ---------------------
 const allowedOrigins = [
     process.env.CLIENT_URL,
+    "https://sepms.vercel.app",
     "http://localhost:3000",
 ].filter(Boolean) as string[];
 
@@ -25,6 +26,10 @@ app.use(
         origin: (origin, callback) => {
             // Allow requests with no origin (mobile apps, curl, etc.)
             if (!origin) return callback(null, true);
+            // Allow requests from any vercel.app frontend (preview URLs included)
+            if (origin.endsWith(".vercel.app")) {
+                return callback(null, true);
+            }
             if (allowedOrigins.some((allowed) => origin.startsWith(allowed))) {
                 return callback(null, true);
             }
@@ -44,6 +49,10 @@ connectDB();
 // ---------------------
 // Routes
 // ---------------------
+app.get("/", (_req: Request, res: Response) => {
+    res.status(200).send("SEPMS Backend is running successfully!");
+});
+
 app.get("/api/health", (_req: Request, res: Response) => {
     res.status(200).json({
         status: "OK",
