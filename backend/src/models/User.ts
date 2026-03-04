@@ -7,6 +7,7 @@ export interface IUser extends Document {
     role: "admin" | "entrepreneur" | "investor";
     status: "unverified" | "pending" | "verified";
     photoURL: string | null;
+    emailVerified: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -44,6 +45,10 @@ const userSchema = new Schema<IUser>(
         photoURL: {
             type: String,
             default: null,
+        },
+        emailVerified: {
+            type: Boolean,
+            default: false,
         },
     },
     {

@@ -8,12 +8,14 @@ interface ProtectedRouteProps {
     children: React.ReactNode;
     allowedRoles?: UserRole[];
     requireVerified?: boolean;
+    requireEmailVerified?: boolean;
 }
 
 export default function ProtectedRoute({
     children,
     allowedRoles,
     requireVerified = false,
+    requireEmailVerified = true, // Default: require email verification
 }: ProtectedRouteProps) {
     const { user, userProfile, loading } = useAuth();
     const router = useRouter();
@@ -34,12 +36,15 @@ export default function ProtectedRoute({
             return;
         }
 
+        // Email not verified → redirect to verify-email page
+        if (requireEmailVerified && !userProfile.emailVerified) {
+            router.push("/verify-email");
+            return;
+        }
+
         // Needs verification but isn't verified (if needed, warn in dashboard, don't redirect to onboarding)
         if (requireVerified && userProfile.status !== "verified") {
             // We removed onboarding. Usually, verification is just a status flag now.
-            // If you still want to block them, uncomment below, but for now we let them through to the dashboard:
-            // router.push("/entrepreneur/dashboard");
-            // return;
         }
 
         // Role check
@@ -53,7 +58,7 @@ export default function ProtectedRoute({
             router.push(roleRedirects[userProfile.role] || "/");
             return;
         }
-    }, [user, userProfile, loading, router, allowedRoles, requireVerified]);
+    }, [user, userProfile, loading, router, allowedRoles, requireVerified, requireEmailVerified]);
 
     // Show loading spinner
     if (loading) {
@@ -69,6 +74,9 @@ export default function ProtectedRoute({
 
     // Don't render children until auth checks pass
     if (!user || !userProfile) return null;
+
+    // Block rendering if email is not verified
+    if (requireEmailVerified && !userProfile.emailVerified) return null;
 
     if (allowedRoles && userProfile.role && !allowedRoles.includes(userProfile.role)) {
         return null;

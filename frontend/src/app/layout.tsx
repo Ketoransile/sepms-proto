@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SmoothScroll } from "@/components/SmoothScroll";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -26,7 +27,10 @@ export default function RootLayout({
       <body className={`${outfit.variable} font-sans antialiased`}>
         <SmoothScroll>
           <TooltipProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              {children}
+              <Toaster richColors position="top-center" />
+            </AuthProvider>
           </TooltipProvider>
         </SmoothScroll>
       </body>

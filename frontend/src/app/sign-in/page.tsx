@@ -7,22 +7,14 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { toast } from "sonner";
 
 export default function SignInPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { signIn, signInWithGoogle, userProfile } = useAuth();
+    const { signIn, signInWithGoogle, userProfile, user } = useAuth();
     const router = useRouter();
 
     const getRedirect = () => {
@@ -36,7 +28,6 @@ export default function SignInPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
         setLoading(true);
 
         try {
@@ -45,14 +36,13 @@ export default function SignInPage() {
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to sign in";
-            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleSignIn = async () => {
-        setError("");
         setLoading(true);
 
         try {
@@ -61,7 +51,7 @@ export default function SignInPage() {
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to sign in with Google";
-            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -105,12 +95,6 @@ export default function SignInPage() {
                             Enter your email and password below
                         </p>
                     </div>
-
-                    {error && (
-                        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                            {error}
-                        </div>
-                    )}
 
                     <div className="space-y-4">
                         <Button

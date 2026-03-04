@@ -22,6 +22,7 @@ router.post("/register", authenticate, async (req: Request, res: Response): Prom
                     role: existingUser.role,
                     status: existingUser.status,
                     photoURL: existingUser.photoURL,
+                    emailVerified: existingUser.emailVerified,
                 },
             });
             return;
@@ -38,6 +39,7 @@ router.post("/register", authenticate, async (req: Request, res: Response): Prom
             role: assignedRole,
             status: initialStatus,
             photoURL: req.firebaseUser!.picture || null,
+            emailVerified: false,
         });
 
         res.status(201).json({
@@ -50,6 +52,7 @@ router.post("/register", authenticate, async (req: Request, res: Response): Prom
                 role: newUser.role,
                 status: newUser.status,
                 photoURL: newUser.photoURL,
+                emailVerified: newUser.emailVerified,
             },
         });
     } catch (error) {
@@ -80,6 +83,7 @@ router.get("/me", authenticate, async (req: Request, res: Response): Promise<voi
                 role: req.user.role,
                 status: req.user.status,
                 photoURL: req.user.photoURL,
+                emailVerified: req.user.emailVerified,
             },
         });
     } catch (error) {
@@ -106,7 +110,7 @@ router.patch("/role", authenticate, async (req: Request, res: Response): Promise
 
         const updatedUser = await User.findOneAndUpdate(
             { firebaseUid: req.firebaseUser!.uid },
-            { role, status: "pending" }, // Move from unverified to pending after choosing a role
+            { role, status: "pending" },
             { new: true }
         );
 
@@ -125,6 +129,7 @@ router.patch("/role", authenticate, async (req: Request, res: Response): Promise
                 role: updatedUser.role,
                 status: updatedUser.status,
                 photoURL: updatedUser.photoURL,
+                emailVerified: updatedUser.emailVerified,
             },
         });
     } catch (error) {
@@ -147,7 +152,7 @@ router.get("/admin/users", authenticate, authorize("admin"), async (req: Request
         const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
         const total = await User.countDocuments(filter);
         const users = await User.find(filter)
-            .select("fullName email role status photoURL createdAt")
+            .select("fullName email role status photoURL emailVerified createdAt")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(parseInt(limit as string));

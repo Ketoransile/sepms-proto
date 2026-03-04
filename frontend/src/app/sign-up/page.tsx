@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 function SignUpForm() {
     const searchParams = useSearchParams();
@@ -15,12 +16,11 @@ function SignUpForm() {
 
     const [role, setRole] = useState<"entrepreneur" | "investor">("entrepreneur");
     const [fullName, setFullName] = useState("");
-    const [companyName, setCompanyName] = useState(""); // Dynamic field for Entrepreneur
-    const [fundName, setFundName] = useState(""); // Dynamic field for Investor
+    const [companyName, setCompanyName] = useState("");
+    const [fundName, setFundName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -34,15 +34,14 @@ function SignUpForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setError("");
 
         if (password !== confirmPassword) {
-            setError("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
 
         if (password.length < 6) {
-            setError("Password must be at least 6 characters");
+            toast.error("Password must be at least 6 characters");
             return;
         }
 
@@ -50,24 +49,18 @@ function SignUpForm() {
 
         try {
             await signUp(email, password, fullName, { role, companyName, fundName });
-
-            const redirects: Record<string, string> = {
-                admin: "/admin/oversight",
-                entrepreneur: "/entrepreneur/dashboard",
-                investor: "/investor/feed",
-            };
-            router.push(redirects[role] || "/");
+            toast.success("Account created! Check your email to verify.");
+            router.push("/verify-email");
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to create account";
-            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
     };
 
     const handleGoogleSignUp = async () => {
-        setError("");
         setLoading(true);
 
         try {
@@ -82,7 +75,7 @@ function SignUpForm() {
         } catch (err: unknown) {
             const message =
                 err instanceof Error ? err.message : "Failed to sign up with Google";
-            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -143,11 +136,6 @@ function SignUpForm() {
                         </button>
                     </div>
 
-                    {error && (
-                        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-                            {error}
-                        </div>
-                    )}
 
                     <div className="space-y-4">
                         <Button

@@ -37,7 +37,14 @@ export const authenticate = async (
         const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
         req.firebaseUser = decodedToken;
 
+        // Find user and auto-sync emailVerified from Firebase
         const user = await User.findOne({ firebaseUid: decodedToken.uid });
+
+        if (user && decodedToken.email_verified && !user.emailVerified) {
+            user.emailVerified = true;
+            await user.save();
+        }
+
         req.user = user;
 
         next();

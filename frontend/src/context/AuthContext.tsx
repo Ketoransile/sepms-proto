@@ -6,6 +6,7 @@ import {
     useEffect,
     useState,
     ReactNode,
+    useCallback,
 } from "react";
 import {
     User,
@@ -15,6 +16,7 @@ import {
     signInWithPopup,
     signOut as firebaseSignOut,
     updateProfile,
+    sendEmailVerification,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 
@@ -30,6 +32,7 @@ export interface UserProfile {
     role: UserRole;
     status: "unverified" | "pending" | "verified";
     photoURL: string | null;
+    emailVerified: boolean;
 }
 
 interface AuthContextType {
@@ -40,6 +43,8 @@ interface AuthContextType {
     signIn: (email: string, password: string) => Promise<void>;
     signInWithGoogle: (additionalData?: { role: string; companyName?: string; fundName?: string }) => Promise<void>;
     signOut: () => Promise<void>;
+    resendVerificationEmail: () => Promise<void>;
+    refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,9 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
     // Fetch user profile from our backend
-    const fetchUserProfile = async (firebaseUser: User): Promise<UserProfile | null> => {
+    const fetchUserProfile = useCallback(async (firebaseUser: User): Promise<UserProfile | null> => {
         try {
-            const token = await firebaseUser.getIdToken();
+            const token = await firebaseUser.getIdToken(true); // Force refresh to get latest email_verified
             const res = await fetch(`${API_URL}/auth/me`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -67,15 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 return data.user;
             }
 
-            // If 404, user exists in Firebase but not in our DB yet
             return null;
         } catch (error) {
             console.error("Error fetching user profile:", error);
             return null;
         }
-    };
+    }, [API_URL]);
 
-    // Sync or create user in our backend after Firebase auth
+    // Register user in backend
     const syncUserWithBackend = async (
         firebaseUser: User,
         isNewUser: boolean = false,
@@ -85,7 +89,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const token = await firebaseUser.getIdToken();
 
             if (isNewUser) {
-                // Register user in our backend
                 const res = await fetch(`${API_URL}/auth/register`, {
                     method: "POST",
                     headers: {
@@ -105,7 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            // Fetch existing profile
             return await fetchUserProfile(firebaseUser);
         } catch (error) {
             console.error("Error syncing user with backend:", error);
@@ -115,7 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for Firebase auth state changes
     useEffect(() => {
-        // Guard: don't attach listener if Firebase auth isn't initialized
         if (!auth) {
             setLoading(false);
             return;
@@ -135,8 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         return () => unsubscribe();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [fetchUserProfile]);
 
     // ---------------------
     // Auth Methods
@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!auth) throw new Error("Firebase not initialized");
         const credential = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(credential.user, { displayName: fullName });
+
+        // Send Firebase verification email
+        await sendEmailVerification(credential.user);
+
+        // Register in backend
         const profile = await syncUserWithBackend(credential.user, true, additionalData);
         setUserProfile(profile);
     };
@@ -160,10 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!auth || !googleProvider) throw new Error("Firebase not initialized");
         const credential = await signInWithPopup(auth, googleProvider);
 
-        // Check if user already exists in backend
         let profile = await fetchUserProfile(credential.user);
 
-        // If not, register them
         if (!profile) {
             profile = await syncUserWithBackend(credential.user, true, additionalData);
         }
@@ -178,6 +181,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
     };
 
+    // Resend Firebase verification email
+    const resendVerificationEmail = async () => {
+        if (!auth?.currentUser) throw new Error("No user logged in");
+        await sendEmailVerification(auth.currentUser);
+    };
+
+    // Reload Firebase user and refresh profile from backend
+    const refreshUserProfile = useCallback(async () => {
+        if (!auth?.currentUser) return;
+
+        // Reload Firebase user to get latest emailVerified status
+        await auth.currentUser.reload();
+
+        // Force token refresh so the backend middleware gets the updated email_verified claim
+        const profile = await fetchUserProfile(auth.currentUser);
+        setUserProfile(profile);
+    }, [fetchUserProfile]);
+
     return (
         <AuthContext.Provider
             value={{
@@ -188,6 +209,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 signIn,
                 signInWithGoogle,
                 signOut,
+                resendVerificationEmail,
+                refreshUserProfile,
             }}
         >
             {children}
