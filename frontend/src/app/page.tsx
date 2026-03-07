@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/accordion";
 import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
 
 /* ──────────────────────────────────────────────
    DATA
@@ -158,6 +160,19 @@ const FAQ = [
   },
 ];
 
+const DOTS = [
+  { top: "65%", left: "15%", duration: 4, delay: 0 },
+  { top: "72%", left: "85%", duration: 3.5, delay: 1 },
+  { top: "52%", left: "75%", duration: 4.5, delay: 0.5 },
+  { top: "82%", left: "30%", duration: 5, delay: 2 },
+  { top: "68%", left: "65%", duration: 3, delay: 1.5 },
+  { top: "78%", left: "45%", duration: 4.2, delay: 0.2 },
+  { top: "52%", left: "82%", duration: 5.5, delay: 1.2 },
+  { top: "88%", left: "20%", duration: 4.8, delay: 0.8 },
+  { top: "60%", left: "10%", duration: 4.1, delay: 1.1 },
+  { top: "85%", left: "75%", duration: 3.8, delay: 0.4 },
+];
+
 /* ──────────────────────────────────────────────
    COMPONENT
    ────────────────────────────────────────────── */
@@ -165,8 +180,6 @@ const FAQ = [
 export default function Home() {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
-  const [navVisible, setNavVisible] = useState(true);
-  const lastScrollY = useRef(0);
 
   const getDashboardRoute = () => {
     if (user && userProfile?.role) {
@@ -180,104 +193,177 @@ export default function Home() {
     return "/sign-in";
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      if (currentY < 50) {
-        setNavVisible(true);
-      } else if (currentY > lastScrollY.current) {
-        setNavVisible(false);
-      } else {
-        setNavVisible(true);
-      }
-      lastScrollY.current = currentY;
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-
-
   return (
     <div className="flex min-h-screen flex-col">
-      {/* ─── Floating Navbar ─── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center md:px-4 md:pt-4">
-        <header
-          className={`w-full border-b border-border/50 bg-background/80 backdrop-blur-2xl backdrop-saturate-150 transition-all duration-300 md:max-w-3xl md:rounded-2xl md:border md:shadow-lg md:shadow-black/5 ${navVisible ? "translate-y-0 opacity-100" : "max-md:translate-y-0 max-md:opacity-100 md:-translate-y-[calc(100%+2rem)] md:opacity-0"
-            }`}
-        >
-          <div className="flex h-14 items-center justify-between px-5">
-            <Link href="/" className="flex items-center gap-2.5 cursor-pointer">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-foreground text-background font-bold text-xs">
-                S
-              </div>
-              <span className="font-semibold text-sm tracking-tight">SEPMS</span>
-            </Link>
-
-            <nav className="hidden items-center gap-6 md:flex">
-              <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</Link>
-              <Link href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How it works</Link>
-              <Link href="#platform" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Platform</Link>
-              <Link href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</Link>
-            </nav>
-
-            <div className="flex items-center gap-1">
-              <ThemeToggle />
-              {user ? (
-                <Button size="sm" className="h-8 text-xs ml-2" onClick={() => router.push(getDashboardRoute())}>
-                  Go to Dashboard
-                </Button>
-              ) : (
-                <>
-                  <Button size="sm" className="h-8 text-xs" onClick={() => router.push("/sign-up")}>
-                    Get started
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </header>
-      </div>
+      <Navbar />
       {/* ─── Hero ─── */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:64px_64px] dark:block hidden" />
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:64px_64px] dark:hidden block" />
-        <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/5 blur-[120px]" />
+
+        {/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
+        <motion.div
+          className="pointer-events-none absolute top-[100px] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/20 dark:bg-indigo-500/30 blur-[130px] rounded-[100%]"
+          animate={{
+            opacity: [0.5, 0.9, 0.5],
+            scale: [1, 1.05, 1],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+
+        {/* Dispersed Random Dots Below Title */}
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+          {DOTS.map((dot, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-[2px] h-[2px] rounded-full bg-black dark:bg-white"
+              style={{ top: dot.top, left: dot.left }}
+              animate={{
+                y: [0, -15, 0],
+                opacity: [0.2, 0.8, 0.2],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: dot.duration,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: dot.delay,
+              }}
+            />
+          ))}
+        </div>
 
         <div className="relative w-full px-4 sm:px-8 lg:px-16 pt-32 pb-24 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
-          <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide">
-              AI-Powered Investment Matching Platform
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
-              Where great ideas
-              <br />
-              meet the right capital
+          <motion.div
+            className="mx-auto max-w-3xl text-center"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.15,
+                  delayChildren: 0.1,
+                }
+              }
+            }}
+          >
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 20, filter: "blur(10px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { type: "spring", bounce: 0, duration: 1 } }
+              }}
+            >
+              <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-xs font-medium tracking-wide">
+                AI-Powered Investment Matching Platform
+              </Badge>
+            </motion.div>
+
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]" style={{ perspective: 1000 }}>
+              <motion.span
+                className="block"
+                variants={{
+                  hidden: { opacity: 0, y: 40, filter: "blur(10px)", rotateX: -30 },
+                  visible: { opacity: 1, y: 0, filter: "blur(0px)", rotateX: 0, transition: { type: "spring", bounce: 0.3, duration: 1.2 } }
+                }}
+              >
+                Where great ideas
+              </motion.span>
+              <motion.span
+                className="block relative bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent pb-4 inline-block mx-auto"
+                variants={{
+                  hidden: { opacity: 0, y: 40, filter: "blur(10px)", rotateX: -30 },
+                  visible: { opacity: 1, y: 0, filter: "blur(0px)", rotateX: 0, transition: { type: "spring", bounce: 0.3, duration: 1.2 } }
+                }}
+              >
+                meet the right capital
+                {/* Animated under-line */}
+                <motion.svg
+                  className="absolute -bottom-1 left-0 w-full h-5 overflow-visible"
+                  viewBox="0 0 100 20"
+                  preserveAspectRatio="none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1, duration: 0.5 }}
+                >
+                  <motion.path
+                    d="M0,10 Q25,20 50,10 T100,10"
+                    fill="none"
+                    stroke="url(#title-underline-grad)"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, ease: "easeInOut", delay: 1.2 }}
+                  />
+                  <defs>
+                    <linearGradient id="title-underline-grad" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#3b82f6" />
+                      <stop offset="50%" stopColor="#8b5cf6" />
+                      <stop offset="100%" stopColor="#ec4899" />
+                    </linearGradient>
+                  </defs>
+                </motion.svg>
+              </motion.span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed">
+
+            <motion.p
+              className="mx-auto mt-6 max-w-xl text-base sm:text-lg text-muted-foreground leading-relaxed"
+              variants={{
+                hidden: { opacity: 0, y: 20, filter: "blur(10px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { type: "spring", bounce: 0, duration: 1 } }
+              }}
+            >
               SEPMS uses machine learning to score your pitch, verify your documents,
               and semantically match you with investors who align with your vision.
-            </p>
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            </motion.p>
+
+            <motion.div
+              className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center"
+              variants={{
+                hidden: { opacity: 0, y: 20, filter: "blur(10px)" },
+                visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { type: "spring", bounce: 0, duration: 1 } }
+              }}
+            >
               {user ? (
-                <Button size="lg" className="h-12 px-8 text-sm font-semibold" onClick={() => router.push(getDashboardRoute())}>
-                  Go to my Dashboard
+                <Button size="lg" className="h-12 px-8 text-sm font-semibold rounded-full group relative overflow-hidden" onClick={() => router.push(getDashboardRoute())}>
+                  <span className="relative z-10 transition-transform duration-300 group-hover:scale-105 inline-block">Go to my Dashboard</span>
+                  <motion.div
+                    className="absolute inset-0 bg-white/20"
+                    initial={{ x: "-100%" }}
+                    whileHover={{ x: "100%" }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  />
                 </Button>
               ) : (
                 <>
-                  <Button size="lg" className="h-12 px-8 text-sm font-semibold" onClick={() => router.push("/sign-up?role=entrepreneur")}>
-                    Start pitching — it&apos;s free
+                  <Button size="lg" className="h-12 px-8 text-sm font-semibold rounded-full group relative overflow-hidden" onClick={() => router.push("/sign-up?role=entrepreneur")}>
+                    <span className="relative z-10 transition-transform duration-300 group-hover:scale-105 inline-block">Start pitching — it&apos;s free</span>
+                    <motion.div
+                      className="absolute inset-0 bg-white/20"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: "100%" }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
+                    />
                   </Button>
-                  <Button size="lg" variant="outline" className="h-12 px-8 text-sm font-semibold" onClick={() => router.push("/sign-up?role=investor")}>
+                  <Button size="lg" variant="outline" className="h-12 px-8 text-sm font-semibold rounded-full hover:bg-muted transition-transform duration-300 hover:scale-105" onClick={() => router.push("/sign-up?role=investor")}>
                     I&apos;m an investor
                   </Button>
                 </>
               )}
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground/60">
+            </motion.div>
+
+            <motion.p
+              className="mt-4 text-xs text-muted-foreground/60"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { duration: 1 } }
+              }}
+            >
               No credit card required · Free tier available · Setup in 5 minutes
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
       </section>
 
@@ -285,11 +371,18 @@ export default function Home() {
       <section id="stats" className="border-y border-border/50">
         <div className="w-full px-4 sm:px-8 lg:px-16 py-12">
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="text-center">
+            {STATS.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
                 <p className="text-3xl sm:text-4xl font-bold tracking-tight">{stat.value}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -298,7 +391,13 @@ export default function Home() {
       {/* ─── Core Features ─── */}
       <section id="features" className="py-20 sm:py-28">
         <div className="w-full px-4 sm:px-8 lg:px-16">
-          <div className="mx-auto max-w-2xl text-center mb-16">
+          <motion.div
+            className="mx-auto max-w-2xl text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs">Core Features</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Everything you need to get funded
@@ -306,18 +405,26 @@ export default function Home() {
             <p className="mt-4 text-muted-foreground">
               From submission to funding, our platform handles the heavy lifting so you can focus on building.
             </p>
-          </div>
+          </motion.div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((feature) => (
-              <Card key={feature.title} className="group border-border/50 bg-background hover:bg-background hover:border-border transition-all duration-300">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-xl">
-                    {feature.icon}
-                  </div>
-                  <h3 className="font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-                </CardContent>
-              </Card>
+            {FEATURES.map((feature, i) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <Card className="h-full group border-border/50 bg-background hover:bg-muted/10 hover:border-border transition-all duration-300">
+                  <CardContent className="p-6">
+                    <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-muted text-xl group-hover:scale-110 group-hover:bg-primary/10 transition-all duration-300">
+                      {feature.icon}
+                    </div>
+                    <h3 className="font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
