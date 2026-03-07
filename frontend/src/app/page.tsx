@@ -217,7 +217,7 @@ export default function Home() {
 
         {/* Centered Ambient Lighting (Responsive for Light/Dark Mode) */}
         <motion.div
-          className="pointer-events-none absolute top-[100px] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-indigo-500/20 dark:bg-indigo-500/30 blur-[130px] rounded-[100%]"
+          className="pointer-events-none absolute top-[120px] left-1/2 -translate-x-1/2 w-[350px] sm:w-[800px] h-[300px] sm:h-[400px] bg-indigo-500/20 dark:bg-indigo-500/30 blur-[75px] sm:blur-[130px] rounded-[100%]"
           animate={{
             opacity: [0.5, 0.9, 0.5],
             scale: [1, 1.05, 1],
@@ -247,7 +247,7 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="relative w-full px-4 sm:px-8 lg:px-16 pt-32 pb-24 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
+        <div className="relative w-full px-4 sm:px-8 lg:px-16 pt-44 pb-20 sm:pt-40 sm:pb-32 lg:pt-52 lg:pb-40">
           <motion.div
             className="mx-auto max-w-3xl text-center"
             initial="hidden"
@@ -386,7 +386,7 @@ export default function Home() {
           {/* Intense Ambient Glow Behind Dashboard */}
           <motion.div
             style={{ opacity: glowOpacity, scale }}
-            className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[80%] h-[60%] bg-primary/40 dark:bg-primary/50 blur-[120px] rounded-[100%] pointer-events-none"
+            className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[90%] sm:w-[80%] h-[60%] bg-primary/40 dark:bg-primary/50 blur-[60px] sm:blur-[120px] rounded-[100%] pointer-events-none"
           />
 
           <motion.div
