@@ -15,8 +15,10 @@ import {
 } from "@/components/ui/accordion";
 import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Zap, Link as LinkIcon, ShieldCheck, BarChart3, Radio, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import Image from "next/image";
 
 /* ──────────────────────────────────────────────
    DATA
@@ -31,32 +33,32 @@ const STATS = [
 
 const FEATURES = [
   {
-    icon: "⚡",
+    icon: <Zap className="w-5 h-5 text-primary" />,
     title: "AI-Powered Scoring",
     desc: "Our ML engine evaluates pitch completeness, market viability, and financial projections — generating an actionable quality score in seconds.",
   },
   {
-    icon: "🔗",
+    icon: <LinkIcon className="w-5 h-5 text-blue-500" />,
     title: "Semantic Matching",
     desc: "384-dimensional vector embeddings map your pitch against investor preferences for high-precision, context-aware matching.",
   },
   {
-    icon: "🛡️",
+    icon: <ShieldCheck className="w-5 h-5 text-green-500" />,
     title: "KYC Verification",
     desc: "Automated document verification ensures every participant is authenticated before entering the ecosystem.",
   },
   {
-    icon: "📊",
+    icon: <BarChart3 className="w-5 h-5 text-purple-500" />,
     title: "Live Analytics",
     desc: "Real-time dashboards track pitch performance, investor engagement, view counts, and match quality metrics.",
   },
   {
-    icon: "🎙️",
+    icon: <Radio className="w-5 h-5 text-rose-500" />,
     title: "Audio Summaries",
     desc: "AI-generated voice summaries let investors preview pitches on the go — no reading required.",
   },
   {
-    icon: "💬",
+    icon: <MessageSquare className="w-5 h-5 text-cyan-500" />,
     title: "Secure Messaging",
     desc: "Once matched, communicate directly with investors through encrypted, in-platform conversations.",
   },
@@ -180,6 +182,18 @@ const DOTS = [
 export default function Home() {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
+
+  // 3D Dashboard Scroll Effect setup
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: dashboardRef,
+    offset: ["start end", "center center"]
+  });
+
+  const rotateX = useTransform(scrollYProgress, [0, 1], [35, 0]);
+  const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
+  const opacity = useTransform(scrollYProgress, [0, 1], [0.2, 1]);
+  const glowOpacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   const getDashboardRoute = () => {
     if (user && userProfile?.role) {
@@ -365,6 +379,52 @@ export default function Home() {
             </motion.p>
           </motion.div>
         </div>
+
+        {/* ─── 3D Dashboard Mockup Reveal ─── */}
+        <div ref={dashboardRef} className="relative mx-auto max-w-6xl px-4 sm:px-8 pb-32 pt-10" style={{ perspective: "2000px" }}>
+
+          {/* Intense Ambient Glow Behind Dashboard */}
+          <motion.div
+            style={{ opacity: glowOpacity, scale }}
+            className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[80%] h-[60%] bg-primary/40 dark:bg-primary/50 blur-[120px] rounded-[100%] pointer-events-none"
+          />
+
+          <motion.div
+            style={{
+              rotateX,
+              scale,
+              opacity,
+            }}
+            className="w-full relative rounded-xl border border-white/20 dark:border-white/10 bg-white/5 dark:bg-black/20 shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] p-2 sm:p-4 backdrop-blur-xl z-10"
+          >
+            {/* Mockup Top Bar (Dots) */}
+            <div className="flex items-center gap-2 mb-3 pl-2 opacity-50">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+            </div>
+
+            {/* The Image */}
+            <div className="relative w-full aspect-[16/9] overflow-hidden rounded-lg border border-border/50">
+              {/* Light Mode Mockup */}
+              <Image
+                src="/light-dashboard.png"
+                alt="SEPMS Platform Dashboard Mockup Light"
+                fill
+                className="object-cover object-top dark:hidden block"
+                priority
+              />
+              {/* Dark Mode Mockup */}
+              <Image
+                src="/dark-dashboard.png"
+                alt="SEPMS Platform Dashboard Mockup Dark"
+                fill
+                className="object-cover object-top hidden dark:block"
+                priority
+              />
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* ─── Stats ─── */}
@@ -433,7 +493,13 @@ export default function Home() {
       {/* ─── Platform Features (3 columns) ─── */}
       <section id="platform" className="border-y border-border/50 py-20 sm:py-28 bg-background">
         <div className="w-full px-4 sm:px-8 lg:px-16">
-          <div className="mx-auto max-w-2xl text-center mb-16">
+          <motion.div
+            className="mx-auto max-w-2xl text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs">Platform</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Built for every stakeholder
@@ -441,23 +507,31 @@ export default function Home() {
             <p className="mt-4 text-muted-foreground">
               Three roles, one seamless experience — tailored dashboards for entrepreneurs, investors, and admins.
             </p>
-          </div>
+          </motion.div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {PLATFORM_FEATURES.map((role) => (
-              <Card key={role.title} className="border-border/50 bg-background">
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-lg mb-1">{role.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-5">{role.subtitle}</p>
-                  <ul className="space-y-3">
-                    {role.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2.5 text-sm">
-                        <span className="mt-0.5 text-primary">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+            {PLATFORM_FEATURES.map((role, i) => (
+              <motion.div
+                key={role.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+              >
+                <Card className="h-full border-border/50 bg-background hover:border-indigo-500/30 dark:hover:border-indigo-500/50 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1 transition-all duration-300">
+                  <CardContent className="p-6 h-full flex flex-col">
+                    <h3 className="font-bold text-lg mb-1">{role.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-5">{role.subtitle}</p>
+                    <ul className="space-y-3">
+                      {role.items.map((item) => (
+                        <li key={item} className="flex items-start gap-2.5 text-sm">
+                          <span className="mt-0.5 text-primary">✓</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -466,7 +540,13 @@ export default function Home() {
       {/* ─── How it works ─── */}
       <section id="how-it-works" className="py-20 sm:py-28">
         <div className="w-full px-4 sm:px-8 lg:px-16">
-          <div className="mx-auto max-w-2xl text-center mb-16">
+          <motion.div
+            className="mx-auto max-w-2xl text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs">How it works</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               From pitch to partnership in four steps
@@ -474,17 +554,24 @@ export default function Home() {
             <p className="mt-4 text-muted-foreground">
               Our intelligent pipeline takes your raw pitch and transforms it into a funded opportunity.
             </p>
-          </div>
+          </motion.div>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((step, i) => (
-              <div key={step.step} className="relative">
+              <motion.div
+                key={step.step}
+                className="relative"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+              >
                 <div className="text-5xl font-bold text-muted-foreground/15 mb-4">{step.step}</div>
                 <h3 className="font-semibold mb-2">{step.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
                 {i < STEPS.length - 1 && (
                   <div className="hidden lg:block absolute top-8 -right-4 text-muted-foreground/20 text-2xl">→</div>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -513,14 +600,20 @@ export default function Home() {
       </section>
 
       {/* ─── FAQ ─── */}
-      <section id="faq" className="py-20 sm:py-28">
+      <section id="faq" className="py-20 sm:py-28 z-20 relative">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-8 lg:px-16">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
             <Badge variant="secondary" className="mb-4 px-3 py-1 text-xs">FAQ</Badge>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Frequently asked questions
             </h2>
-          </div>
+          </motion.div>
 
           <Accordion type="single" collapsible className="w-full space-y-3">
             {FAQ.map((item, i) => (
@@ -538,37 +631,43 @@ export default function Home() {
       </section>
 
       {/* ─── CTA ─── */}
-      <section className="py-20 sm:py-28 border-t border-border/50">
-        <div className="mx-auto max-w-7xl px-4">
-          <Card className="overflow-hidden border-border/50 bg-background">
-            <CardContent className="relative p-8 sm:p-12 lg:p-16 text-center">
-              <div className="pointer-events-none absolute inset-0" />
-              <div className="relative">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
-                  Ready to accelerate your funding?
-                </h2>
-                <p className="mx-auto max-w-lg text-muted-foreground mb-8">
-                  Join hundreds of entrepreneurs who&apos;ve already connected with the right investors through AI-powered matching.
-                </p>
-                <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                  {user ? (
-                    <Button size="lg" className="h-12 px-8 font-semibold" onClick={() => router.push(getDashboardRoute())}>
-                      Go to Dashboard
-                    </Button>
-                  ) : (
-                    <>
-                      <Button size="lg" className="h-12 px-8 font-semibold" onClick={() => router.push("/sign-up")}>
-                        Create free account
+      <section className="py-20 sm:py-28 border-t border-border/50 relative overflow-hidden">
+        <div className="mx-auto max-w-7xl px-4 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, type: "spring" }}
+          >
+            <Card className="overflow-hidden border-border/50 bg-background/50 backdrop-blur-xl relative">
+              <CardContent className="relative p-8 sm:p-12 lg:p-16 text-center">
+                <div className="relative">
+                  <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-4">
+                    Ready to accelerate your funding?
+                  </h2>
+                  <p className="mx-auto max-w-lg text-muted-foreground mb-8">
+                    Join hundreds of entrepreneurs who&apos;ve already connected with the right investors through AI-powered matching.
+                  </p>
+                  <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                    {user ? (
+                      <Button size="lg" className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300" onClick={() => router.push(getDashboardRoute())}>
+                        Go to Dashboard
                       </Button>
-                      <Button size="lg" variant="outline" className="h-12 px-8 font-semibold" onClick={() => router.push("/sign-in")}>
-                        Sign in
-                      </Button>
-                    </>
-                  )}
+                    ) : (
+                      <>
+                        <Button size="lg" className="h-12 px-8 font-semibold hover:scale-105 transition-transform duration-300" onClick={() => router.push("/sign-up")}>
+                          Create free account
+                        </Button>
+                        <Button size="lg" variant="outline" className="h-12 px-8 font-semibold hover:scale-105 hover:bg-muted transition-all duration-300" onClick={() => router.push("/sign-in")}>
+                          Sign in
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </section>
 
